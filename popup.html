@@ -16,16 +16,19 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
   <!-- CORE -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+  <link rel="stylesheet" href="reset.css">
   <link rel="stylesheet" href="style.css" />
   <script src="popup.js"></script>
 </head>
 
 <body>
-  <div>
-    <input type="text" id="noteInput" placeholder="type..." />
-    <button id="saveButton">Add to Note</button>
-  </div>
-  <div id="notesList"></div>
+  <section id="input-area">
+    <textarea id="inputField" class="textarea is-primary" autofocus autocapitalize="on" placeholder="What is Global.css?" maxlength="150"></textarea>
+    <button id="saveBtn" class="button is-primary" type="button">Add</button>
+  </section>
+
+  <section id="list"></section>
 </body>
 
 </html>

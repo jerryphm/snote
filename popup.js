@@ -1,91 +1,84 @@
-if (!chrome.storage.local) {
-  // TODO: show error
-  console.log('storage API is not available');
-} else {
+if (chrome.storage.local) {
   document.addEventListener("DOMContentLoaded", () => {
-    const noteInput = document.getElementById("noteInput");
-    const saveButton = document.getElementById("saveButton");
-    const notesList = document.getElementById("notesList");
+    const inputField = document.getElementById("inputField");
+    const saveBtn = document.getElementById("saveBtn");
+    const list = document.getElementById("list");
 
     let count = 0;
+    const data_key = "notes";
 
-    // STARTUP:
-    chrome.storage.local.get("notes", ({notes}) => {
-      if (notes) {
-        const formattedNotes = JSON.parse(notes);
-        // 1. show notes
-        formattedNotes.forEach(({ text, id }) => {
-          const div = document.createElement('div');
-          div.innerHTML = `<span>${text}</span>`
-          const delBtn = document.createElement('button')
-          delBtn.innerHTML = '<img src="delete.svg" alt="delete" width="20" height="20">'
-          div.appendChild(delBtn)
-          notesList.appendChild(div);
+    const updateBadge = () => {
+      chrome.action.setBadgeText({ text: String(count) })
+    }
 
-          delBtn.onclick = () => {
-            notesList.removeChild(div)
-            removeNoteFromStorage(id)
-            count--
-            chrome.action.setBadgeText({ text: String(count) });
-          }
-        });
-        // 2. udpate badge
-        count = formattedNotes.length;
-        chrome.action.setBadgeText({ text: String(count) });
-      }
-    });
-
-    const removeNoteFromStorage = (id) => {
-      chrome.storage.local.get("notes", (result) => {
-        const existingNotes = result.notes ? JSON.parse(result.notes) : [];
+    const removeNote = (id) => {
+      chrome.storage.local.get(data_key, ({ notes }) => {
+        const existingNotes = JSON.parse(notes);
         const updatedNotes = existingNotes.filter((note) => note.id !== id);
         chrome.storage.local.set({ notes: JSON.stringify(updatedNotes) });
       });
     }
 
-    // ADD NOTES:
+    const appendNoteToList = ({ text, id, type }) => {
+      const div = document.createElement('div');
+      div.classList.add('note')
+      div.innerHTML = `<p>${text}</p>`;
+
+      const delBtn = document.createElement('button');
+      delBtn.classList.add("button", "is-danger")
+      delBtn.innerHTML = '<img src="delete.svg" alt="delete" width="20" height="20">';
+      delBtn.onclick = () => {
+        list.removeChild(div);
+        removeNote(id);
+        count--;
+        updateBadge();
+      }
+      div.appendChild(delBtn);
+      if (type === 'old') {
+        list.appendChild(div)
+      } else {
+        list.insertBefore(div, list.children[0])
+      }
+    }
+
     const addNote = () => {
-      const noteText = noteInput.value.trim();
-      if (!noteText) {
+      const id = Date.now();
+      const text = inputField.value.trim();
+      if (!text) {
         return;
       }
-      const id = Date.now()
       // 1. clear input field
-      noteInput.value = "";
-
+      inputField.value = "";
       // 2. append new note to HTML
-      const newNote = document.createElement('div');
-      newNote.appendChild(document.createTextNode(noteText))
-      notesList.insertBefore(newNote, notesList.children[0])
-
-      newNote.innerHTML = `<span>${noteText}</span>`
-      const delBtn = document.createElement('button')
-      delBtn.innerHTML = '<img src="delete.svg" alt="delete" width="20" height="20">'
-      newNote.appendChild(delBtn)
-      delBtn.onclick = () => {
-        notesList.removeChild(newNote)
-        removeNoteFromStorage(id)
-        count--
-        chrome.action.setBadgeText({ text: String(count) });
-      }
-
-
+      appendNoteToList({ text, id, type: 'new' })
       // 4. update badge
       count++
-      chrome.action.setBadgeText({ text: String(count) });
-
+      updateBadge()
       // 5. save new note to storage
-      chrome.storage.local.get("notes", (result) => {
-        const existingNotes = result.notes ? JSON.parse(result.notes) : [];
-        const newNote = { text: noteText, id };
-        existingNotes.unshift(newNote);
-        chrome.storage.local.set({ notes: JSON.stringify(existingNotes) });
+      chrome.storage.local.get(data_key, ({ notes }) => {
+        const formattedNotes = notes ? JSON.parse(notes) : [];
+        console.log('formattedNotes', formattedNotes);
+        formattedNotes.unshift({ text: text, id });
+        chrome.storage.local.set({ notes: JSON.stringify(formattedNotes) });
       });
     }
-    saveButton.addEventListener("click", addNote);
-    noteInput.addEventListener("keydown", ({ key }) => {
-      if (key === 'Enter') addNote();
+
+    // STARTUP:
+    chrome.storage.local.get(data_key, ({ notes }) => {
+      if (notes) {
+        // 1. show notes
+        const formattedNotes = JSON.parse(notes);
+        formattedNotes.forEach(({ text, id }) => appendNoteToList({ text, id, type: 'old' }));
+        // 2. update badge
+        count = formattedNotes.length;
+        updateBadge();
+      }
     });
 
+    // ADD NOTES:
+    saveBtn.addEventListener("click", addNote);
+    inputField.addEventListener("keydown", ({ key }) => {
+      if (key === 'Enter') addNote();
+    });
   });
 }

@@ -1,1 +1,1 @@
-Instant note-taking and easy access📑, all in one tiny Chrome extension😍
+### Instant note-taking and easy access📑, all in one tiny Chrome extension😍
