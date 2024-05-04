@@ -1,0 +1,17 @@
+{
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "description": "Instant note-taking and easy access",
+  "icons": {
+    "128": "icon.png"
+  },
+  "manifest_version": 3,
+  "name": "Notes",
+  "permissions": [
+    "activeTab",
+    "webNavigation",
+    "storage"
+  ],
+  "version": "1.0"
+}
